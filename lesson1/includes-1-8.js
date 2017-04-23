@@ -2,8 +2,16 @@
 /*eslint no-unused-vars:0, no-console:0*/
 
 function objToQuery(obj) {
-    var query = Object.keys(obj).map(key => key + '=' + obj[key]).join('&');
-    return '?' + encodeURI(query);
+    var query = Object.keys(obj).map(function (key) {
+        if (Array.isArray()) {
+            return obj[key].map(item => key + '[]=' + item).join('&');
+        } else {
+            return key + '=' + obj[key];
+        }
+    }).join('&');
+    query = '?' + encodeURI(query);
+    console.log('query:', query);
+    return query;
 }
 
 var fs = require('fs'),
@@ -11,12 +19,10 @@ var fs = require('fs'),
     token = require('../getToken.js')('../token.json'),
     color = require('chalk'),
     domain = 'https://canvas.instructure.com',
-    apiCall = '/api/v1/calendar_events',
+    apiCall = '/api/v1/users/self/favorites/courses',
     query = {
-        //format yyyy-mm-dd or ISO 8601 YYYY-MM-DDTHH:MM:SSZ
-        start_date: "2010-12-01",
-        //defaults to start_date
-        end_date: "2011-01-31",
+        //this is a list of things to return but you have to tell them to
+        includes: ['term'],
         access_token: token
     };
 
@@ -27,7 +33,7 @@ got(domain + apiCall + objToQuery(query))
         console.log("Responce Body:")
         console.log(color.gray(JSON.stringify(body, null, 4)));
         console.log('answer:');
-        console.log(color.green('event id: ' + body[0].id));
+        console.log(color.green('course.term.id: ' + body[0].term.id));
     })
     .catch(function (error) {
         console.log(color.red(error.response.body));
